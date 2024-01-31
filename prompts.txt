@@ -1,0 +1,2 @@
+Clasificar la intención de pago del siguiente Diálogo en Muy Baja, Baja, Media, Alta o Muy Alta
+Generar un scoring de intención de pago del 1 al 100
