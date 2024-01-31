@@ -2,3 +2,4 @@ google-cloud-aiplatform
 google-cloud-documentai
 langchain
 langchain-community
+streamlit

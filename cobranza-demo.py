@@ -13,24 +13,15 @@
 # limitations under the License.
 #
 
-# Second
+# Imports
 import streamlit as st
-
 import vertexai
+from vertexai.preview.generative_models import GenerativeModel, Part
 from google.cloud import documentai
 from google.api_core.client_options import ClientOptions
 
-from langchain.prompts import PromptTemplate
-from langchain.docstore.document import Document
-from langchain.llms import VertexAI
-#from langchain.chains.question_answering import load_qa_chain
-from langchain.chains.combine_documents import create_stuff_documents_chain
-from langchain.chains import LLMChain
-
-from vertexai.preview.generative_models import GenerativeModel, Part
-
 # Constantes
-PROJECT_ID = "cecl-genai-demos"
+PROJECT_ID = "cecl-genai-demos" # @TODO: Cambiar ID del proyecto
 LOCATION = "us-central1"
 MODEL_NAME = "gemini-pro"
     
@@ -38,7 +29,7 @@ MODEL_NAME = "gemini-pro"
 def read_document(file):
     # Constantes para inicializar el doc processor de DocAI
     DOCAI_LOCATION = "us"
-    PROCESSOR_ID = "a3c30cf2a12207e9"
+    PROCESSOR_ID = "a3c30cf2a12207e9" # @TODO: Cambiar ID del DocAI processor
     PROCESSOR_VERSION = 'rc'
 
     # Inicializo el cliente de DocAI
@@ -63,41 +54,15 @@ def read_document(file):
     document = result.document
     return document.text
 
-
 # Inicializo el cliente de Vertex
 vertexai.init(project=PROJECT_ID, location=LOCATION)
 
 # Inicializo el modelo de Vertex
 model = GenerativeModel("gemini-pro")
 
-# Defino el template del prompt
-prompt = PromptTemplate.from_template("""
-Question: {input}
-
-{call_transcription}
-
-Answer:""")
-
-# Instancio la chain de QA de Langchain
-#chain = create_stuff_documents_chain(
-#    llm=VertexAI(model_name=MODEL_NAME, temperature=0, max_output_tokens=1024),
-#    prompt=prompt)
-
-# Instancio la chain de Langchain
-llm = VertexAI(model_name=MODEL_NAME, temperature=0, max_output_tokens=1024)
-chain = LLMChain(
-    llm=llm,
-    prompt=prompt
-)
-
 # Dibujo la ventana
 st.title("📝 Demo Cobranza Gemini")
 uploaded_file = st.file_uploader("Suba un documento", type=("pdf", "md"))
-#question = st.text_input(
-#    "Indique un prompt para analizar el llamado",
-#    placeholder="Clasifique la intención de pago del cliente en Muy Baja, Baja, Media, Alta o Muy Alta",
-#    disabled=not uploaded_file,
-#)
 question = st.text_area(
     "Indique un prompt para analizar el llamado",
     height=3,
@@ -112,23 +77,14 @@ if not question:
     st.info("Por favor indique una pregunta")
 
 if uploaded_file and question:
+    # Leo el documento
     text = read_document(uploaded_file)
 
+    # Muestro el documento
     st.write("### Transcripción del llamado")
     st.write(text)
 
-    doc =  Document(page_content=text, metadata={"source": "local"})
-    print(doc)
-    docs = [doc]
-
-    #reply = str(chain.run(input_documents=docs, question=question))
-    #reply = str(chain.invoke({
-    #    "input": question,
-    #    "context": docs
-    #}))
-    #reply = str(chain.run(input=question, call_transcription=text))
-    #reply = llm(prompt.format(input=question, call_transcription=text))
-    
+    # Genero la respuesta
     responses = model.generate_content(
         question + "\n\n" + text,
         generation_config = {
@@ -141,8 +97,8 @@ if uploaded_file and question:
     reply = ""
     for response in responses:
         reply += response.text
+    print("\n" + reply)
 
-    print("*** RESPUESTA\n" + reply)
-
+    # Muestro la respuesta
     st.write("### Respuesta")
     st.write(reply)
